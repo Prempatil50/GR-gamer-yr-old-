@@ -1,0 +1,228 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidChannelConfig(data, userId) {
+      return data.userId == userId &&
+        data.connected is bool &&
+        data.channelId is string && data.channelId.size() <= 128 &&
+        data.channelTitle is string && data.channelTitle.size() <= 120 &&
+        data.channelHandle is string && data.channelHandle.size() <= 100 &&
+        data.thumbnailUrl is string && data.thumbnailUrl.size() <= 500 &&
+        data.subscriberCount is int && data.subscriberCount >= 0 &&
+        data.videoCount is int && data.videoCount >= 0 &&
+        data.createdAt is timestamp && data.createdAt <= request.time &&
+        data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidAiSettings(data, userId) {
+      return data.userId == userId &&
+        data.autoReplyActive is bool &&
+        data.ignoreSpam is bool &&
+        data.ignoreAbusive is bool &&
+        data.avoidDuplicates is bool &&
+        data.autoDetectLanguage is bool &&
+        data.preferredLanguage in ['AUTO', 'ENGLISH', 'HINDI', 'HINGLISH'] &&
+        data.enabledLanguages is list &&
+        data.enabledLanguages.size() >= 1 && data.enabledLanguages.size() <= 3 &&
+        data.enabledLanguages.hasOnly(['ENGLISH', 'HINDI', 'HINGLISH']) &&
+        data.replyTone in ['FRIENDLY', 'HYPE_GAMER', 'PRO_COACH', 'CALM_HELPER'] &&
+        data.maxReplyLength is int && data.maxReplyLength >= 50 && data.maxReplyLength <= 500 &&
+        data.pollingIntervalSeconds is int && data.pollingIntervalSeconds >= 15 && data.pollingIntervalSeconds <= 300 &&
+        data.customPrompt is string && data.customPrompt.size() >= 10 && data.customPrompt.size() <= 2000 &&
+        data.totalCommentsReceived is int && data.totalCommentsReceived >= 0 &&
+        data.totalRepliesSent is int && data.totalRepliesSent >= 0 &&
+        data.pendingCommentsCount is int && data.pendingCommentsCount >= 0 &&
+        data.failedRepliesCount is int && data.failedRepliesCount >= 0 &&
+        data.skippedSpamCount is int && data.skippedSpamCount >= 0 &&
+        data.createdAt is timestamp && data.createdAt <= request.time &&
+        data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidCommentRecord(data, userId) {
+      return data.userId == userId &&
+        data.youtubeCommentId is string && data.youtubeCommentId.size() >= 1 && data.youtubeCommentId.size() <= 200 &&
+        data.videoId is string && data.videoId.size() <= 100 &&
+        data.videoTitle is string && data.videoTitle.size() <= 250 &&
+        data.authorName is string && data.authorName.size() <= 150 &&
+        data.authorAvatarUrl is string && data.authorAvatarUrl.size() <= 500 &&
+        data.commentText is string && data.commentText.size() >= 1 && data.commentText.size() <= 3000 &&
+        data.detectedLanguage in ['ENGLISH', 'HINDI', 'HINGLISH', 'UNKNOWN'] &&
+        data.status in ['PENDING', 'REPLIED', 'SKIPPED_SPAM', 'SKIPPED_ABUSIVE', 'FAILED', 'IGNORED'] &&
+        data.generatedReply is string && data.generatedReply.size() <= 1000 &&
+        data.failureReason is string && data.failureReason.size() <= 500 &&
+        data.publishedAtIso is string && data.publishedAtIso.size() <= 64 &&
+        data.repliedAtIso is string && data.repliedAtIso.size() <= 64 &&
+        data.createdAt is timestamp && data.createdAt <= request.time &&
+        data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidReplyHistoryItem(data, userId) {
+      return data.userId == userId &&
+        data.youtubeCommentId is string && data.youtubeCommentId.size() >= 1 && data.youtubeCommentId.size() <= 200 &&
+        data.videoId is string && data.videoId.size() <= 100 &&
+        data.videoTitle is string && data.videoTitle.size() <= 250 &&
+        data.authorName is string && data.authorName.size() <= 150 &&
+        data.originalComment is string && data.originalComment.size() >= 1 && data.originalComment.size() <= 3000 &&
+        data.aiReply is string && data.aiReply.size() >= 1 && data.aiReply.size() <= 1000 &&
+        data.languageUsed in ['ENGLISH', 'HINDI', 'HINGLISH'] &&
+        data.status in ['SENT', 'FAILED', 'SKIPPED'] &&
+        data.errorMessage is string && data.errorMessage.size() <= 500 &&
+        data.postedToYoutube is bool &&
+        data.createdAt is timestamp && data.createdAt <= request.time &&
+        data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /users/{userId}/channel_config/{configId} {
+      allow get: if isOwner(userId) && isValidId(configId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+        isValidId(configId) &&
+        incoming().keys().hasAll([
+          'userId', 'connected', 'channelId', 'channelTitle', 'channelHandle',
+          'thumbnailUrl', 'subscriberCount', 'videoCount', 'createdAt', 'updatedAt'
+        ]) &&
+        incoming().keys().hasOnly([
+          'userId', 'connected', 'channelId', 'channelTitle', 'channelHandle',
+          'thumbnailUrl', 'subscriberCount', 'videoCount', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidChannelConfig(incoming(), userId);
+      allow update: if isOwner(userId) &&
+        isValidId(configId) &&
+        isValidChannelConfig(incoming(), userId) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'connected', 'channelId', 'channelTitle', 'channelHandle',
+          'thumbnailUrl', 'subscriberCount', 'videoCount', 'updatedAt'
+        ]);
+      allow delete: if isOwner(userId) && isValidId(configId);
+    }
+
+    match /users/{userId}/ai_settings/{settingsId} {
+      allow get: if isOwner(userId) && isValidId(settingsId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+        isValidId(settingsId) &&
+        incoming().keys().hasAll([
+          'userId', 'autoReplyActive', 'ignoreSpam', 'ignoreAbusive', 'avoidDuplicates',
+          'autoDetectLanguage', 'preferredLanguage', 'enabledLanguages', 'replyTone',
+          'maxReplyLength', 'pollingIntervalSeconds', 'customPrompt',
+          'totalCommentsReceived', 'totalRepliesSent', 'pendingCommentsCount',
+          'failedRepliesCount', 'skippedSpamCount', 'createdAt', 'updatedAt'
+        ]) &&
+        incoming().keys().hasOnly([
+          'userId', 'autoReplyActive', 'ignoreSpam', 'ignoreAbusive', 'avoidDuplicates',
+          'autoDetectLanguage', 'preferredLanguage', 'enabledLanguages', 'replyTone',
+          'maxReplyLength', 'pollingIntervalSeconds', 'customPrompt',
+          'totalCommentsReceived', 'totalRepliesSent', 'pendingCommentsCount',
+          'failedRepliesCount', 'skippedSpamCount', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidAiSettings(incoming(), userId);
+      allow update: if isOwner(userId) &&
+        isValidId(settingsId) &&
+        isValidAiSettings(incoming(), userId) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly(['autoReplyActive', 'updatedAt']) ||
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'autoDetectLanguage', 'preferredLanguage', 'enabledLanguages', 'updatedAt'
+          ]) ||
+          incoming().diff(existing()).affectedKeys().hasOnly(['customPrompt', 'updatedAt']) ||
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'autoReplyActive', 'ignoreSpam', 'ignoreAbusive', 'avoidDuplicates',
+            'replyTone', 'maxReplyLength', 'pollingIntervalSeconds', 'updatedAt'
+          ]) ||
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'totalCommentsReceived', 'totalRepliesSent', 'pendingCommentsCount',
+            'failedRepliesCount', 'skippedSpamCount', 'updatedAt'
+          ])
+        );
+      allow delete: if isOwner(userId) && isValidId(settingsId);
+    }
+
+    match /users/{userId}/comments/{commentId} {
+      allow get: if isOwner(userId) && isValidId(commentId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+        isValidId(commentId) &&
+        incoming().keys().hasAll([
+          'userId', 'youtubeCommentId', 'videoId', 'videoTitle', 'authorName',
+          'authorAvatarUrl', 'commentText', 'detectedLanguage', 'status',
+          'generatedReply', 'failureReason', 'publishedAtIso', 'repliedAtIso',
+          'createdAt', 'updatedAt'
+        ]) &&
+        incoming().keys().hasOnly([
+          'userId', 'youtubeCommentId', 'videoId', 'videoTitle', 'authorName',
+          'authorAvatarUrl', 'commentText', 'detectedLanguage', 'status',
+          'generatedReply', 'failureReason', 'publishedAtIso', 'repliedAtIso',
+          'createdAt', 'updatedAt'
+        ]) &&
+        isValidCommentRecord(incoming(), userId);
+      allow update: if isOwner(userId) &&
+        isValidId(commentId) &&
+        isValidCommentRecord(incoming(), userId) &&
+        incoming().userId == existing().userId &&
+        incoming().youtubeCommentId == existing().youtubeCommentId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'detectedLanguage', 'status', 'generatedReply', 'failureReason',
+          'repliedAtIso', 'updatedAt'
+        ]);
+      allow delete: if isOwner(userId) && isValidId(commentId);
+    }
+
+    match /users/{userId}/reply_history/{replyId} {
+      allow get: if isOwner(userId) && isValidId(replyId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+        isValidId(replyId) &&
+        incoming().keys().hasAll([
+          'userId', 'youtubeCommentId', 'videoId', 'videoTitle', 'authorName',
+          'originalComment', 'aiReply', 'languageUsed', 'status', 'errorMessage',
+          'postedToYoutube', 'createdAt', 'updatedAt'
+        ]) &&
+        incoming().keys().hasOnly([
+          'userId', 'youtubeCommentId', 'videoId', 'videoTitle', 'authorName',
+          'originalComment', 'aiReply', 'languageUsed', 'status', 'errorMessage',
+          'postedToYoutube', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidReplyHistoryItem(incoming(), userId);
+      allow update: if isOwner(userId) &&
+        isValidId(replyId) &&
+        isValidReplyHistoryItem(incoming(), userId) &&
+        incoming().userId == existing().userId &&
+        incoming().youtubeCommentId == existing().youtubeCommentId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'aiReply', 'languageUsed', 'status', 'errorMessage', 'postedToYoutube', 'updatedAt'
+        ]);
+      allow delete: if isOwner(userId) && isValidId(replyId);
+    }
+  }
+}

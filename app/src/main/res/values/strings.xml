@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">GR GAMER AI</string>
+    <string name="app_tagline">AI YouTube Comment Auto-Reply Command Center</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="connect_youtube_channel">Connect YouTube Channel</string>
+    <string name="disconnect_youtube_channel">Disconnect YouTube Channel</string>
+    <string name="start_auto_reply">START AUTO REPLY</string>
+    <string name="stop_auto_reply">STOP AUTO REPLY</string>
+    <string name="auto_reply_toggle_label">AUTO REPLY ON/OFF</string>
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_comments">Comments</string>
+    <string name="nav_history">History</string>
+    <string name="nav_settings">Settings</string>
+    <string name="cd_app_logo">GR GAMER AI Logo</string>
+    <string name="cd_hero_banner">GR GAMER AI Gaming Command Center Banner</string>
+    <string name="cd_channel_avatar">Connected YouTube Channel Avatar</string>
+    <string name="cd_back">Navigate back</string>
+</resources>

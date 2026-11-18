@@ -1,0 +1,357 @@
+{
+  "entities": {
+    "ChannelConfig": {
+      "title": "ChannelConfig",
+      "description": "Connected YouTube channel metadata for GR GAMER AI.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase user UID."
+        },
+        "connected": {
+          "type": "boolean",
+          "description": "Whether a YouTube channel is currently connected."
+        },
+        "channelId": {
+          "type": "string",
+          "description": "YouTube Data API channel ID."
+        },
+        "channelTitle": {
+          "type": "string",
+          "description": "YouTube channel display title."
+        },
+        "channelHandle": {
+          "type": "string",
+          "description": "YouTube custom URL or handle."
+        },
+        "thumbnailUrl": {
+          "type": "string",
+          "description": "Channel avatar image URL."
+        },
+        "subscriberCount": {
+          "type": "integer",
+          "description": "Subscriber count reported by YouTube Data API."
+        },
+        "videoCount": {
+          "type": "integer",
+          "description": "Published video count reported by YouTube Data API."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "userId",
+        "connected",
+        "channelId",
+        "channelTitle",
+        "channelHandle",
+        "thumbnailUrl",
+        "subscriberCount",
+        "videoCount",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AiSettings": {
+      "title": "AiSettings",
+      "description": "AI auto-reply configuration, prompt, language settings, and counters.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase user UID."
+        },
+        "autoReplyActive": {
+          "type": "boolean",
+          "description": "Whether automatic YouTube comment replying is active."
+        },
+        "ignoreSpam": {
+          "type": "boolean",
+          "description": "Skip promotional links, bot spam, and repetitive junk comments."
+        },
+        "ignoreAbusive": {
+          "type": "boolean",
+          "description": "Skip toxic, abusive, or harassing comments."
+        },
+        "avoidDuplicates": {
+          "type": "boolean",
+          "description": "Prevent replying more than once to the same comment ID."
+        },
+        "autoDetectLanguage": {
+          "type": "boolean",
+          "description": "Automatically detect comment language and reply in the same language."
+        },
+        "preferredLanguage": {
+          "type": "string",
+          "enum": ["AUTO", "ENGLISH", "HINDI", "HINGLISH"],
+          "description": "Language mode for replies."
+        },
+        "enabledLanguages": {
+          "type": "string",
+          "description": "Array of active language codes (ENGLISH, HINDI, HINGLISH)."
+        },
+        "replyTone": {
+          "type": "string",
+          "enum": ["FRIENDLY", "HYPE_GAMER", "PRO_COACH", "CALM_HELPER"],
+          "description": "Personality style for generated replies."
+        },
+        "maxReplyLength": {
+          "type": "integer",
+          "description": "Maximum character length target for AI replies."
+        },
+        "pollingIntervalSeconds": {
+          "type": "integer",
+          "description": "Interval in seconds between automatic comment checks."
+        },
+        "customPrompt": {
+          "type": "string",
+          "description": "User-customizable system prompt for GR GAMER AI."
+        },
+        "totalCommentsReceived": {
+          "type": "integer",
+          "description": "Total comments fetched for processing."
+        },
+        "totalRepliesSent": {
+          "type": "integer",
+          "description": "Total replies successfully posted to YouTube."
+        },
+        "pendingCommentsCount": {
+          "type": "integer",
+          "description": "Count of comments currently pending reply."
+        },
+        "failedRepliesCount": {
+          "type": "integer",
+          "description": "Total failed reply attempts."
+        },
+        "skippedSpamCount": {
+          "type": "integer",
+          "description": "Total comments skipped due to spam or abuse filters."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "userId",
+        "autoReplyActive",
+        "ignoreSpam",
+        "ignoreAbusive",
+        "avoidDuplicates",
+        "autoDetectLanguage",
+        "preferredLanguage",
+        "enabledLanguages",
+        "replyTone",
+        "maxReplyLength",
+        "pollingIntervalSeconds",
+        "customPrompt",
+        "totalCommentsReceived",
+        "totalRepliesSent",
+        "pendingCommentsCount",
+        "failedRepliesCount",
+        "skippedSpamCount",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CommentRecord": {
+      "title": "CommentRecord",
+      "description": "YouTube comment synced for AI moderation and reply management.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase user UID."
+        },
+        "youtubeCommentId": {
+          "type": "string",
+          "description": "Original YouTube comment ID."
+        },
+        "videoId": {
+          "type": "string",
+          "description": "YouTube video ID."
+        },
+        "videoTitle": {
+          "type": "string",
+          "description": "YouTube video title or ID label."
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Comment author display name."
+        },
+        "authorAvatarUrl": {
+          "type": "string",
+          "description": "Comment author profile image URL."
+        },
+        "commentText": {
+          "type": "string",
+          "description": "Comment text content."
+        },
+        "detectedLanguage": {
+          "type": "string",
+          "enum": ["ENGLISH", "HINDI", "HINGLISH", "UNKNOWN"],
+          "description": "Language detected by Gemini AI."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["PENDING", "REPLIED", "SKIPPED_SPAM", "SKIPPED_ABUSIVE", "FAILED", "IGNORED"],
+          "description": "Processing status of the comment."
+        },
+        "generatedReply": {
+          "type": "string",
+          "description": "AI-generated reply text."
+        },
+        "failureReason": {
+          "type": "string",
+          "description": "Error message if replying failed."
+        },
+        "publishedAtIso": {
+          "type": "string",
+          "description": "ISO timestamp when comment was published on YouTube."
+        },
+        "repliedAtIso": {
+          "type": "string",
+          "description": "ISO timestamp when reply was posted."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "userId",
+        "youtubeCommentId",
+        "videoId",
+        "videoTitle",
+        "authorName",
+        "authorAvatarUrl",
+        "commentText",
+        "detectedLanguage",
+        "status",
+        "generatedReply",
+        "failureReason",
+        "publishedAtIso",
+        "repliedAtIso",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ReplyHistoryItem": {
+      "title": "ReplyHistoryItem",
+      "description": "Audit log of AI replies generated and posted to YouTube comments.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase user UID."
+        },
+        "youtubeCommentId": {
+          "type": "string",
+          "description": "YouTube comment ID replied to."
+        },
+        "videoId": {
+          "type": "string",
+          "description": "YouTube video ID."
+        },
+        "videoTitle": {
+          "type": "string",
+          "description": "YouTube video title."
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Comment author display name."
+        },
+        "originalComment": {
+          "type": "string",
+          "description": "Original comment text."
+        },
+        "aiReply": {
+          "type": "string",
+          "description": "Generated AI reply text."
+        },
+        "languageUsed": {
+          "type": "string",
+          "enum": ["ENGLISH", "HINDI", "HINGLISH"],
+          "description": "Language of the AI reply."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["SENT", "FAILED", "SKIPPED"],
+          "description": "Delivery status of the reply."
+        },
+        "errorMessage": {
+          "type": "string",
+          "description": "Failure reason if status is FAILED."
+        },
+        "postedToYoutube": {
+          "type": "boolean",
+          "description": "Whether the reply was published via YouTube Data API v3."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "userId",
+        "youtubeCommentId",
+        "videoId",
+        "videoTitle",
+        "authorName",
+        "originalComment",
+        "aiReply",
+        "languageUsed",
+        "status",
+        "errorMessage",
+        "postedToYoutube",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/channel_config/{configId}": {
+      "schema": { "$ref": "#/entities/ChannelConfig" },
+      "description": "Stores the connected YouTube channel details for the signed-in user."
+    },
+    "/users/{userId}/ai_settings/{settingsId}": {
+      "schema": { "$ref": "#/entities/AiSettings" },
+      "description": "Stores AI prompt, language preferences, auto-reply toggle, and telemetry counters."
+    },
+    "/users/{userId}/comments/{commentId}": {
+      "schema": { "$ref": "#/entities/CommentRecord" },
+      "description": "Stores fetched YouTube comments and their AI moderation/reply status."
+    },
+    "/users/{userId}/reply_history/{replyId}": {
+      "schema": { "$ref": "#/entities/ReplyHistoryItem" },
+      "description": "Stores historical log of AI-generated YouTube comment replies."
+    }
+  }
+}
