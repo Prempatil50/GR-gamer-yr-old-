@@ -94,6 +94,38 @@ jobs:
           fi
           echo "Temporary debug keystore verified."
 
+      - name: Accept Android SDK licenses
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          echo "Android SDK root: ${SDK_ROOT:-not set}"
+          if [ -n "$SDK_ROOT" ]; then
+            SDKMANAGER_BIN=""
+            if [ -x "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
+              SDKMANAGER_BIN="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+            elif [ -d "$SDK_ROOT/cmdline-tools" ]; then
+              SDKMANAGER_BIN=$(find "$SDK_ROOT/cmdline-tools" -maxdepth 3 -type f -name sdkmanager 2>/dev/null | head -n 1 || true)
+            fi
+            if [ -z "$SDKMANAGER_BIN" ] && command -v sdkmanager >/dev/null 2>&1; then
+              SDKMANAGER_BIN=$(command -v sdkmanager)
+            fi
+            if [ -n "$SDKMANAGER_BIN" ]; then
+              echo "Accepting Android SDK licenses with: $SDKMANAGER_BIN"
+              set +o pipefail
+              if [ -w "$SDK_ROOT" ]; then
+                yes | "$SDKMANAGER_BIN" --sdk_root="$SDK_ROOT" --licenses >/dev/null 2>&1 || true
+              elif command -v sudo >/dev/null 2>&1; then
+                yes | sudo "$SDKMANAGER_BIN" --sdk_root="$SDK_ROOT" --licenses >/dev/null 2>&1 || true
+              else
+                yes | "$SDKMANAGER_BIN" --sdk_root="$SDK_ROOT" --licenses >/dev/null 2>&1 || true
+              fi
+              set -o pipefail
+            else
+              echo "sdkmanager not found; continuing without explicit license acceptance."
+            fi
+          fi
+
       - name: Build debug APK
         shell: bash
         run: gradle :app:assembleDebug --stacktrace --no-daemon
@@ -226,7 +258,16 @@ jobs:
           RELEASE_TITLE="Debug APK Build #${GITHUB_RUN_NUMBER}"
 
           if [ "$RELEASE_OUTCOME" = "success" ]; then
-            gh release view "$RELEASE_TAG"
+            for attempt in 1 2 3; do
+              if gh release view "$RELEASE_TAG"; then
+                break
+              fi
+              if [ "$attempt" -eq 3 ]; then
+                echo "::warning::Release was created, but gh release view did not return metadata yet."
+                exit 0
+              fi
+              sleep 3
+            done
             RELEASE_URL=$(gh release view "$RELEASE_TAG" --json url --jq '.url')
 
             echo "Release Tag: $RELEASE_TAG"
